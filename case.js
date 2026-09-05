@@ -233,7 +233,7 @@ const reply = (teks) => {
     }, { quoted: m });
 }
 async function sendImage(imageUrl, caption) {
-  devtrust.sendMessage(m.chat, {
+  return await devtrust.sendMessage(m.chat, {
     image: { url: imageUrl },
     caption,
     contextInfo: {
