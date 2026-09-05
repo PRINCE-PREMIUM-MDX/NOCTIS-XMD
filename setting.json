@@ -1,0 +1,25 @@
+{
+  "bot": {
+    "mode": "self"
+  },
+  "50958110376@s.whatsapp.net": {
+    "feature.autoreply": true
+  },
+  "50958110376@s.whatsapp.net": {
+    "autoViewStatus": true
+  },
+  "50958110376@s.whatsapp.net": {
+    "autoViewStatus": true
+  },
+  "50958110376@lid": {
+    "feature.autoreply": true,
+    "feature.antibadword": true
+  },
+  "50958110376@s.whatsapp.net": {
+    "autoViewStatus": true,
+    "autobio": true
+  },
+  "50958110376@s.whatsapp.net": {
+    "banned": false
+  }
+}
