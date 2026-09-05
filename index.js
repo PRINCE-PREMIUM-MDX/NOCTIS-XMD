@@ -10,6 +10,58 @@ const AUTH_FILE = './auth.json';
 const PAIRING_DIR = './nexstore/pairing/';
 const startpairing = require('./pair');
 
+// --- Site web de pairing (intégré directement ici, pour tourner en même temps que le bot) ---
+const express = require('express');
+const pairingApp = express();
+pairingApp.use(express.json());
+pairingApp.use(express.static(path.join(__dirname, 'public')));
+
+const PAIRING_FILE = path.join(__dirname, 'nexstore', 'pairing', 'pairing.json');
+
+function waitForCode(number, sinceTime, timeoutMs = 20000, intervalMs = 1000) {
+    return new Promise((resolve, reject) => {
+        const start = Date.now();
+        const check = () => {
+            if (fs.existsSync(PAIRING_FILE)) {
+                try {
+                    const data = JSON.parse(fs.readFileSync(PAIRING_FILE, 'utf8'));
+                    const ts = new Date(data.timestamp).getTime();
+                    if (data.number === number && ts >= sinceTime) {
+                        return resolve(data.code);
+                    }
+                } catch (e) { /* fichier en cours d'écriture */ }
+            }
+            if (Date.now() - start > timeoutMs) {
+                return reject(new Error("Délai dépassé : le code n'a pas été généré à temps. Réessayez."));
+            }
+            setTimeout(check, intervalMs);
+        };
+        check();
+    });
+}
+
+pairingApp.post('/api/pair', async (req, res) => {
+    const phone = (req.body && req.body.phone || '').replace(/[^0-9]/g, '');
+    if (!phone || phone.length < 8) {
+        return res.status(400).json({ error: "Numéro invalide. Entrez uniquement des chiffres avec l'indicatif (ex: 22890000000)." });
+    }
+    const requestTime = Date.now();
+    try {
+        await startpairing(phone);
+        const code = await waitForCode(phone, requestTime);
+        res.json({ code });
+    } catch (err) {
+        console.error('Erreur pairing:', err.message);
+        res.status(500).json({ error: 'Impossible de générer le code pour le moment. Réessayez dans quelques secondes.' });
+    }
+});
+
+const WEB_PORT = process.env.PORT || 3000;
+pairingApp.listen(WEB_PORT, () => {
+    console.log(chalk.blue(`🌐 Serveur de pairing en ligne : http://localhost:${WEB_PORT}`));
+});
+// --- Fin site web de pairing ---
+
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function isAuthenticated() {
