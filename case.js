@@ -574,7 +574,7 @@ const readmore = String.fromCharCode(8206).repeat(4001) // this forces "read mor
 
     const menuText = `
 ╔═━━━✦✦✦━━━━━━═╗
- 👑 *NOCTIS CRASHER XMD*
+ 🦎*NOCTIS XMD*⚡
 ╚═━━━✦✦✦━━━━━━═╝
 
 ◆ *OWNER:* *PRINCE PREMIUM*
@@ -593,7 +593,7 @@ const readmore = String.fromCharCode(8206).repeat(4001) // this forces "read mor
 ◆ *RAM:* ${(totalMem - freeMem) / 1024 / 1024 / 1024}GB / ${(totalMem / 1024 / 1024 / 1024).toFixed(1)}GB
 ◆ *MODE:* ${devtrust.public ? '🌍 Public' : '🔒 Self'}
 ◆ *MOOD:* 🌸 (24h rotation)
-
+★Enjoy your free bot ✨
 ━━━━━━━━━━━━━━━
 
 ${readMore}
@@ -1050,7 +1050,7 @@ const fakeSystem = {
             participant: "0@s.whatsapp.net"
         },
         message: {
-            conversation: "Violet crasher Md"
+            conversation: "NOCTIS XMD"
         }
     };
     await devtrust.sendMessage(from, {
