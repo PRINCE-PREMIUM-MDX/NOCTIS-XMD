@@ -2629,7 +2629,34 @@ case 'kicknum': {
     let metadata = await devtrust.groupMetadata(m.chat)
     let participants = metadata.participants
 
-    let kicked = 0
+    // Résout le vrai numéro d'un membre même si WhatsApp le cache (format @lid)
+    async function resolveNumber(member) {
+        // 1) champs directs parfois fournis par Baileys
+        if (member.phoneNumber) return member.phoneNumber.split('@')[0]
+        if (member.jid && !member.jid.includes('@lid')) return member.jid.split('@')[0]
+
+        if (member.id.includes('@lid')) {
+            // 2) table interne de correspondance lid -> numéro (Baileys récent)
+            try {
+                const pn = await devtrust.signalRepository?.lidMapping?.getPNForLID?.(member.id)
+                if (pn) return pn.split('@')[0]
+            } catch (e) {}
+
+            // 3) store de contacts du bot, si le contact a déjà été vu ailleurs
+            try {
+                const contact = devtrust.store?.contacts?.[member.id]
+                if (contact?.id && !contact.id.includes('@lid')) return contact.id.split('@')[0]
+            } catch (e) {}
+
+            return null // vrai numéro introuvable
+        }
+
+        // membre normal, pas caché
+        return member.id.split('@')[0]
+    }
+
+    let toKick = []
+    let hidden = 0
     for (let member of participants) {
         // skip bot and command issuer
         if (member.id === botNumber) continue
@@ -2637,16 +2664,30 @@ case 'kicknum': {
         // ne pas virer les admins/superadmins
         if (member.admin === "superadmin" || member.admin === "admin") continue
 
-        let num = member.id.split('@')[0]
-        if (num.startsWith(code)) {
-            await devtrust.groupParticipantsUpdate(
-                m.chat,
-                [member.id],
-                'remove'
-            )
-            kicked++
-            await sleep(1500) // pour éviter le rate limit WhatsApp
+        let num = await resolveNumber(member)
+        console.log(`[kicknum] id=${member.id} -> num=${num}`)
+
+        if (num === null) {
+            hidden++
+            continue
         }
+
+        if (num.startsWith(code)) {
+            toKick.push(member.id)
+        }
+    }
+
+    if (toKick.length === 0) {
+        let extra = hidden > 0 ? `\n\n⚠️ ${hidden} membre(s) ont un numéro caché par WhatsApp — impossible de vérifier leur indicatif, ils n'ont donc pas été touchés.` : ''
+        return reply(`❌ Aucun membre trouvé avec l'indicatif +${code}.${extra}`)
+    }
+
+    let kicked = 0
+    for (let jid of toKick) {
+        await devtrust.groupParticipantsUpdate(m.chat, [jid], 'remove')
+        kicked++
+        await sleep(1500) // pour éviter le rate limit WhatsApp
+
     }
 
     m.reply(`✅ ${kicked} membre(s) avec l'indicatif +${code} ont été retirés.`)
