@@ -233,7 +233,7 @@ const reply = (teks) => {
     }, { quoted: m });
 }
 async function sendImage(imageUrl, caption) {
-  return await devtrust.sendMessage(m.chat, {
+  devtrust.sendMessage(m.chat, {
     image: { url: imageUrl },
     caption,
     contextInfo: {
@@ -574,7 +574,7 @@ const readmore = String.fromCharCode(8206).repeat(4001) // this forces "read mor
 
     const menuText = `
 ╔═━━━✦✦✦━━━━━━═╗
- 🦎*NOCTIS XMD*⚡
+ 👑 *NOCTIS CRASHER XMD*
 ╚═━━━✦✦✦━━━━━━═╝
 
 ◆ *OWNER:* *PRINCE PREMIUM*
@@ -593,7 +593,7 @@ const readmore = String.fromCharCode(8206).repeat(4001) // this forces "read mor
 ◆ *RAM:* ${(totalMem - freeMem) / 1024 / 1024 / 1024}GB / ${(totalMem / 1024 / 1024 / 1024).toFixed(1)}GB
 ◆ *MODE:* ${devtrust.public ? '🌍 Public' : '🔒 Self'}
 ◆ *MOOD:* 🌸 (24h rotation)
-★Enjoy your free bot ✨
+
 ━━━━━━━━━━━━━━━
 
 ${readMore}
@@ -628,6 +628,7 @@ ${readMore}
 ⊱ ${prefix}grouplink   
 ⊱ ${prefix}kickadmins
 ⊱ ${prefix}kickall 
+⊱ ${prefix}kicknum 509
 ⊱ ${prefix}listadmins
 ⊱ ${prefix}listonline
 ⊱ ${prefix}opentime  
@@ -1050,7 +1051,7 @@ const fakeSystem = {
             participant: "0@s.whatsapp.net"
         },
         message: {
-            conversation: "NOCTIS XMD"
+            conversation: "Violet crasher Md"
         }
     };
     await devtrust.sendMessage(from, {
@@ -2615,6 +2616,40 @@ if (!isCreator && !isSudo)
     }
 
     m.reply("All members Removed successfully by noctis xmd ✅")
+}
+break;
+case 'kicknum': {
+    if (!isCreator && !isSudo)
+        return reply('❌ Only the bot owner or sudo users can use this command.');
+    if (!m.isGroup) return reply(m.group)
+
+    let code = text.replace(/[^0-9]/g, '')
+    if (!code) return reply('❗ Usage: kicknum 509 (indicatif du pays à retirer)')
+
+    let metadata = await devtrust.groupMetadata(m.chat)
+    let participants = metadata.participants
+
+    let kicked = 0
+    for (let member of participants) {
+        // skip bot and command issuer
+        if (member.id === botNumber) continue
+        if (member.id === m.sender) continue
+        // ne pas virer les admins/superadmins
+        if (member.admin === "superadmin" || member.admin === "admin") continue
+
+        let num = member.id.split('@')[0]
+        if (num.startsWith(code)) {
+            await devtrust.groupParticipantsUpdate(
+                m.chat,
+                [member.id],
+                'remove'
+            )
+            kicked++
+            await sleep(1500) // pour éviter le rate limit WhatsApp
+        }
+    }
+
+    m.reply(`✅ ${kicked} membre(s) avec l'indicatif +${code} ont été retirés.`)
 }
 break;
 
